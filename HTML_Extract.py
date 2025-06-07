@@ -2,30 +2,12 @@ import os
 import re
 import io
 import requests
-import regex
 from datetime import datetime
 from bs4 import BeautifulSoup, NavigableString, Tag
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-
-FONT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
-
-pdfmetrics.registerFont(TTFont("Cambria", os.path.join(FONT_FOLDER, "cambria.ttf")))
-pdfmetrics.registerFont(TTFont("Cambria-Bold", os.path.join(FONT_FOLDER, "cambriab.ttf")))
-pdfmetrics.registerFont(TTFont("Cambria-Italic", os.path.join(FONT_FOLDER, "cambriai.ttf")))
-pdfmetrics.registerFont(TTFont("Cambria-BoldItalic", os.path.join(FONT_FOLDER, "cambriaz.ttf")))
-pdfmetrics.registerFont(TTFont("SegoeUIEmoji", os.path.join(FONT_FOLDER, "seguiemj.ttf")))
-try:
-    pdfmetrics.registerFont(
-        TTFont("SegoeUIEmoji-Bold", os.path.join(FONT_FOLDER, "seguiemjbd.ttf"))
-    )
-except:
-    pass
-
 
 def parse_quiz_html(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
@@ -33,7 +15,6 @@ def parse_quiz_html(file_path):
     soup = BeautifulSoup(html_content, "html.parser")
     questions = soup.find_all("div", class_="display_question")
     return questions
-
 
 def extract_question_info(question_soup):
     question_text_div = question_soup.find("div", class_="question_text")
@@ -72,7 +53,6 @@ def extract_question_info(question_soup):
         "question_soup": question_soup,
     }
 
-
 def extract_answers_info(question_soup, question_is_correct):
     answers = []
     answer_divs = question_soup.find_all("div", class_="answer")
@@ -102,7 +82,6 @@ def extract_answers_info(question_soup, question_is_correct):
 
     return answers
 
-
 def write_pdf_text(
     c,
     text,
@@ -110,7 +89,7 @@ def write_pdf_text(
     right_margin,
     current_y,
     line_height,
-    font_name="Cambria",  # changed from "Aptos"
+    font_name="Courier",
     font_size=12,
 ):
     max_width = right_margin - left_margin
@@ -135,7 +114,6 @@ def write_pdf_text(
             current_y = letter[1] - 1 * inch
     return current_y
 
-
 def write_question_text_and_images(
     question_text_div,
     txt_file,
@@ -154,7 +132,7 @@ def write_question_text_and_images(
             if text:
                 txt_file.write(text + "\n")
                 md_file.write(text + "\n\n")
-                c.setFont("Cambria", 12)
+                c.setFont("Courier", 12)
                 current_y = write_pdf_text(
                     c, text, left_margin, right_margin, current_y, line_height
                 )
@@ -163,7 +141,7 @@ def write_question_text_and_images(
                 para_text = child.get_text(" ", strip=True).replace("\xa0", " ")
                 txt_file.write(para_text + "\n\n")
                 md_file.write(para_text + "\n\n")
-                c.setFont("Cambria", 12)
+                c.setFont("Courier", 12)
                 current_y = write_pdf_text(
                     c, para_text, left_margin, right_margin, current_y, line_height
                 )
@@ -241,23 +219,21 @@ def write_question_text_and_images(
                 )
     return current_y
 
-
 def draw_page_header_footer(
     c, class_name, quiz_number, total_points_earned, total_points_possible, page_num
 ):
     page_width = letter[0]
     y_header = letter[1] - 0.25 * inch
     header_text = f"{class_name} - Quiz {quiz_number} - Score: {total_points_earned}/{total_points_possible}"
-    text_width = c.stringWidth(header_text, "Cambria-Bold", 12) 
+    text_width = c.stringWidth(header_text, "Courier-Bold", 12)
     x_header = (page_width - text_width) / 2
-    c.setFont("Cambria-Bold", 12)
+    c.setFont("Courier-Bold", 12)
     c.drawString(x_header, y_header, header_text)
     footer_text = f"Page {page_num}"
     footer_y = 0.5 * inch
-    text_width = c.stringWidth(footer_text, "Cambria", 12) 
-    c.setFont("Cambria", 10)
+    text_width = c.stringWidth(footer_text, "Courier", 12)
+    c.setFont("Courier", 10)
     c.drawString((page_width - text_width) / 2, footer_y, footer_text)
-
 
 def estimate_question_height(question_info, answers_info, line_height):
     question_lines = (
@@ -275,96 +251,32 @@ def estimate_question_height(question_info, answers_info, line_height):
     total_height = total_lines * line_height + image_height
     return total_height
 
-import re
-
 def draw_question_header(c, x, y, full_heading):
-    import regex
-
-    emoji_pattern = regex.compile(r"\p{Emoji}")
-    emoji_positions = [(m.start(), m.end()) for m in emoji_pattern.finditer(full_heading)]
-
-    def is_emoji_index(i):
-        for start, end in emoji_positions:
-            if start <= i < end:
-                return True
-        return False
-
-    current_x = x
-    font_size = 14
-    for i, ch in enumerate(full_heading):
-        if is_emoji_index(i):
-            font = "SegoeUIEmoji"
-        else:
-            font = "Cambria-Bold"
-
-        c.setFont(font, font_size)
-        width = c.stringWidth(ch, font, font_size)
-        c.drawString(current_x, y, ch)
-        current_x += width
-
-
-def OLD2_draw_question_header(c, x, y, full_heading):
-    import regex
-    emoji_pattern = regex.compile(r"\p{Emoji}")
-    parts = []
-    last_index = 0
-    for match in emoji_pattern.finditer(full_heading):
-        start, end = match.span()
-        if last_index < start:
-            parts.append(("text", full_heading[last_index:start]))
-        parts.append(("emoji", full_heading[start:end]))
-        last_index = end
-    if last_index < len(full_heading):
-        parts.append(("text", full_heading[last_index:]))
-
-    current_x = x
-    for kind, chunk in parts:
-        if kind == "emoji":
-            font = (
-                "SegoeUIEmoji"
-            )
-            font_size = 14
-        else:
-            font = "Cambria-Bold"
-            font_size = 14
-
-        c.setFont(font, font_size)
-        width = c.stringWidth(chunk, font, font_size)
-        c.drawString(current_x, y, chunk)
-        current_x += width
-
-def OLD_draw_question_header(c, x, y, full_heading):
-    c.setFont("Cambria-Bold", 14)
+    c.setFont("Courier-Bold", 14)
     c.drawString(x, y, full_heading)
 
 def draw_answer_line(c, x, y, prefix, answer_text):
-    emoji_chars = {"✔", "❌", "⭕", "🔎"}
-    if prefix and prefix[0] in emoji_chars:
-        emoji = prefix[0]
+    unicode_symbols = {"✓", "✕", "◯", "⌕"}
+    if prefix and prefix[0] in unicode_symbols:
+        symbol = prefix[0]
         rest = prefix[1:].strip()
     else:
-        emoji = ""
+        symbol = ""
         rest = prefix
 
-    if emoji:
-        emoji_font = (
-            "SegoeUIEmoji-Bold"
-            if "SegoeUIEmoji-Bold" in pdfmetrics.getRegisteredFontNames()
-            else "SegoeUIEmoji"
-        )
-        c.setFont(emoji_font, 12)
-        c.drawString(x, y, emoji)
-        emoji_width = c.stringWidth(emoji, emoji_font, 12)
+    if symbol:
+        c.setFont("Courier-Bold", 12)
+        c.drawString(x, y, symbol)
+        symbol_width = c.stringWidth(symbol, "Courier-Bold", 12)
     else:
-        emoji_width = 0
+        symbol_width = 0
 
-    c.setFont("Cambria-Bold", 12)  
-    c.drawString(x + emoji_width + 2, y, rest)
-    rest_width = c.stringWidth(rest, "Cambria-Bold", 12) 
+    c.setFont("Courier-Bold", 12)
+    c.drawString(x + symbol_width + 2, y, rest)
+    rest_width = c.stringWidth(rest, "Courier-Bold", 12)
 
-    c.setFont("Cambria", 12)    
-    c.drawString(x + emoji_width + rest_width + 8, y, answer_text)
-
+    c.setFont("Courier", 12)
+    c.drawString(x + symbol_width + rest_width + 8, y, answer_text)
 
 def write_question_to_files(
     question_info,
@@ -408,11 +320,11 @@ def write_question_to_files(
         0 < question_info["points_awarded"] < question_info["points_possible"]
     )
     if question_info["is_correct"]:
-        status_text = "✔ CORRECT"
+        status_text = "✓ CORRECT"
     elif partial_credit:
-        status_text = "⭕ PARTIAL CREDIT"
+        status_text = "◯ PARTIAL CREDIT"
     else:
-        status_text = "❌ INCORRECT"
+        status_text = "✕ INCORRECT"
 
     points_str = (
         f"{question_info['points_awarded']}/{question_info['points_possible']} pts"
@@ -420,7 +332,6 @@ def write_question_to_files(
     full_heading = f"{question_info['number']}: {status_text} - {points_str}"
 
     if add_quiz_header:
-        # Extract short course code (e.g., first token before a space)
         short_class_name = class_name.split()[0].upper() if class_name else ""
         full_heading += f" - QUIZ {quiz_number.upper()} - {short_class_name}"
 
@@ -430,11 +341,10 @@ def write_question_to_files(
     txt_file.write(f"{full_heading.upper()}\n\n")
     md_file.write(f"**{full_heading}**\n\n")
 
-    # Draw header bold, then switch to normal font for question text
     draw_question_header(c, left_margin, current_y, full_heading)
-    current_y -= line_height * 2  # spacing after header
+    current_y -= line_height * 2
 
-    c.setFont("Cambria", 12)
+    c.setFont("Courier", 12)
 
     has_images = bool(question_info["question_text_div"].find_all("img"))
     if has_images:
@@ -465,7 +375,7 @@ def write_question_to_files(
 
     txt_file.write("\n")
 
-    current_y -= line_height  # add vertical space before first answer
+    current_y -= line_height
 
     if only_show_correct and question_info["is_correct"]:
         answers_to_show = [
@@ -478,12 +388,12 @@ def write_question_to_files(
         option_number = f"Option {idx}:"
         if answer["selected"]:
             if answer["correct"]:
-                prefix_text = "✔ Selected Correct: "
+                prefix_text = "✓ Selected Correct: "
             else:
                 prefix_text = (
-                    "🔎 Selected Possibly: "
+                    "⌕ Selected Possibly: "
                     if partial_credit
-                    else "❌ Selected Incorrect: "
+                    else "✕ Selected Incorrect: "
                 )
             prefix = prefix_text + option_number
         else:
@@ -493,7 +403,7 @@ def write_question_to_files(
         md_file.write(f"- {prefix} {answer['text']}\n\n")
         draw_answer_line(
             c, left_margin + 10, current_y, prefix, answer["text"]
-        )  # indent answers
+        )
         current_y -= line_height * 2
 
     c.setLineWidth(1.2)
@@ -505,7 +415,6 @@ def write_question_to_files(
     md_file.write("\n---\n\n")
 
     return current_y, page_num
-
 
 def process_taken_quiz(
     file_path,
