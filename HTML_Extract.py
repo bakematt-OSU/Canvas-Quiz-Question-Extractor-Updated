@@ -338,7 +338,7 @@ def OLD_draw_question_header(c, x, y, full_heading):
     c.drawString(x, y, full_heading)
 
 def draw_answer_line(c, x, y, prefix, answer_text):
-    emoji_chars = {"✓", "✕", "◯", "⌕"}
+    emoji_chars = {"✔", "❌", "⭕", "🔎"}
     if prefix and prefix[0] in emoji_chars:
         emoji = prefix[0]
         rest = prefix[1:].strip()
