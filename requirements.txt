@@ -1,0 +1,11 @@
+beautifulsoup4==4.13.3
+certifi==2025.4.26
+chardet==4.0.0
+idna==2.10
+pillow==11.2.1
+reportlab==3.6.12
+requests==2.25.1
+soupsieve==2.7
+typing_extensions==4.14.0
+urllib3==1.26.20
+regex>=2023.6.3

@@ -1,0 +1,17 @@
+# Ignore everything in /junk
+/junk
+/ARCHIVE
+.venv
+_pycache_
+
+# Allow directory tracking
+!Output/
+!Input/
+
+# Ignore all files in Output except .md
+/Output/*
+!/Output/*.md
+
+# Ignore all files in Input except .md
+/Input/*
+!/Input/*.md
