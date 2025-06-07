@@ -34,10 +34,6 @@ In direct routing, after the initial contact with the home network, the correspo
 
 - ✓ Selected Correct: Option 1: The care-of address
 
-- Option 2: The home agent
-
-- Option 3: The permanent address
-
 
 
 ---
@@ -49,9 +45,7 @@ The default multiple access scheme of 802.11g is RTS/CTS.
 
 
 
-- Option 1: True
-
-- ✓ Selected Correct: Option 2: False
+- ✓ Selected Correct: Option 1: False
 
 
 
@@ -64,9 +58,7 @@ A device which moves between networks is a Mobile device.
 
 
 
-- Option 1: Wireless
-
-- ✓ Selected Correct: Option 2: Mobile
+- ✓ Selected Correct: Option 1: Mobile
 
 
 
@@ -79,15 +71,7 @@ In one type of wireless network, hosts communicate directly with other hosts tha
 
 
 
-- Option 1: infrastructure network
-
-- Option 2: none of these
-
-- Option 3: basic service set network
-
-- ✓ Selected Correct: Option 4: ad-hoc network
-
-- Option 5: access point network
+- ✓ Selected Correct: Option 1: ad-hoc network
 
 
 
@@ -102,8 +86,6 @@ A device which is connected to the network through a link which does not utilize
 
 - ✓ Selected Correct: Option 1: Wireless
 
-- Option 2: Mobile
-
 
 
 ---
@@ -115,15 +97,7 @@ In one type of wireless network, hosts communicate through a central “base sta
 
 
 
-- Option 1: none of these
-
-- Option 2: basic service set network
-
-- ✓ Selected Correct: Option 3: infrastructure network
-
-- Option 4: access point network
-
-- Option 5: ad-hoc network
+- ✓ Selected Correct: Option 1: infrastructure network
 
 
 
@@ -137,10 +111,6 @@ When a mobile unit moves from a home or foreign agent to another (foreign) agent
 
 
 - ✓ Selected Correct: Option 1: a new “care-of” address to the mobile unit
-
-- Option 2: a new home address to the correspondent
-
-- Option 3: a new name (alias) to the mobile unit’s home network
 
 
 
@@ -191,15 +161,7 @@ In one type of wireless network, hosts communicate directly with other hosts tha
 
 
 
-- Option 1: infrastructure network
-
-- Option 2: none of these
-
-- Option 3: access point network
-
-- Option 4: basic service set network
-
-- ✓ Selected Correct: Option 5: ad-hoc network
+- ✓ Selected Correct: Option 1: ad-hoc network
 
 
 
@@ -216,11 +178,9 @@ Which of the following are used in a wireless network such as 802.11n?
 
 - ✓ Selected Correct: Option 2: Carrier Sense Multiple Access
 
-- Option 3: Collision Detection
+- ✓ Selected Correct: Option 3: Reservation system with Request to Send (RTS) and Clear to Send (CTS)
 
-- ✓ Selected Correct: Option 4: Reservation system with Request to Send (RTS) and Clear to Send (CTS)
-
-- ✓ Selected Correct: Option 5: Collision Avoidance
+- ✓ Selected Correct: Option 4: Collision Avoidance
 
 
 
@@ -233,13 +193,7 @@ S represents a source host and D represents a destination host . Which of the fo
 
 
 
-- Option 1: S encrypts a signature using D's private key, and D decrypts the signature using D's public key.
-
-- Option 2: Sencrypts a signature using S's public key, and D decrypts the signature using S's private key.
-
-- Option 3: S encrypts a signature using D's public key, and D decrypts the signature using D's private key.
-
-- ✓ Selected Correct: Option 4: S encrypts a signature using S's private key, and D decrypts the signature using S's public key.
+- ✓ Selected Correct: Option 1: S encrypts a signature using S's private key, and D decrypts the signature using S's public key.
 
 
 
@@ -252,15 +206,7 @@ Given an encryption scheme that uses encrypt(m) to encrypt message m , and uses 
 
 
 
-- Option 1: encrypt(m) = decrypt(c)
-
-- Option 2: encrypt(decrypt(c)) = m
-
-- Option 3: decrypt(m) = encrypt(c)
-
-- Option 4: none of these
-
-- ✓ Selected Correct: Option 5: decrypt(encrypt(m)) = m
+- ✓ Selected Correct: Option 1: decrypt(encrypt(m)) = m
 
 
 
@@ -273,11 +219,7 @@ When using an RSA algorithm to construct private and public keys for a public ke
 
 
 
-- Option 1: e = 5, d = 29
-
-- Option 2: e = 29, d = 63
-
-- ✓ Selected Correct: Option 3: e = 7, d = 63
+- ✓ Selected Correct: Option 1: e = 7, d = 63
 
 
 
@@ -296,13 +238,7 @@ Suppose now that A sends messages to B, and D sends messages to C. What is the c
 
 
 
-- Option 1: 0.25 messages/slot (i.e., one message every four slots).
-
-- ✓ Selected Correct: Option 2: 2 messages/slot.
-
-- Option 3: 1 message/slot.
-
-- Option 4: 0.5 messages/slot (i.e., 1 message every two slots).
+- ✓ Selected Correct: Option 1: 2 messages/slot.
 
 
 
@@ -352,13 +288,7 @@ Suppose now that an omniscient controller (e.g., a controller that knows the sta
 
 
 
-- Option 1: 1 message/slot.
-
-- ✓ Selected Correct: Option 2: 0.5 messages/slot (i.e., 1 message every two slots).
-
-- Option 3: 2 messages/slot.
-
-- Option 4: 0.25 messages/slot (i.e., one message every four slots).
+- ✓ Selected Correct: Option 1: 0.5 messages/slot (i.e., 1 message every two slots).
 
 
 

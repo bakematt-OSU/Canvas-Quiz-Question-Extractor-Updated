@@ -38,18 +38,17 @@ def list_files():
 
 def choose_input_file(files):
     """
-    Prompts the user to choose an input file from a list of available files in the 'InputFiles' folder.
+    Prompts the user to choose an input file from a list of available files in the 'Input' folder.
 
-    This function lists all files in the 'InputFiles' directory and allows the user to select
+    This function lists all files in the 'Input' directory and allows the user to select
     a file by entering its corresponding number.
 
     Returns:
         str: The name of the selected file.
     """
     
-    
     # Display the list of available files
-    print("\nAvailable files in the 'InputFiles' directory:")
+    print("\nAvailable files in the 'Input' directory:")
     for idx, file in enumerate(files, 1):
         print(f"{idx}. {file}")
     
@@ -57,14 +56,12 @@ def choose_input_file(files):
     while True:
         try:
             file_choice = int(input("\nEnter the number of the file you want to process: ")) - 1
-            if file_choice >= 0 and file_choice < len(files):
+            if 0 <= file_choice < len(files):
                 return os.path.join(INPUT_FOLDER, files[file_choice])
             else:
                 print("Invalid selection. Please try again.")
         except ValueError:
             print("Invalid input. Please enter a number.")
-
-
 
 
 def choose_output_file(quiz_number, class_name):
@@ -88,16 +85,20 @@ def choose_output_file(quiz_number, class_name):
 
     base_path = os.path.join(OUTPUT_FOLDER, base_file_name)
 
-    # If any of the files with extensions already exist, prompt to overwrite or rename
+    # Helper to check if files with extensions exist
     def file_exists_with_ext(ext):
         return os.path.exists(base_path + ext)
 
     if any(file_exists_with_ext(ext) for ext in ['.txt', '.md', '.pdf']):
         while True:
-            user_choice = input(f"Output files for '{base_file_name}' already exist. Overwrite? (y/n) or rename with attempt (a): ").lower()
-            if user_choice == 'y':
+            user_choice = input(
+                f"Output files for '{base_file_name}' already exist. Overwrite? (y/n/1/0) or rename with attempt (a): "
+            ).strip().lower()
+
+            if user_choice in ('y', '1'):
+                # Overwrite
                 break
-            elif user_choice == 'n':
+            elif user_choice in ('n', '0'):
                 print("Choose a different quiz number or class name.")
                 return None
             elif user_choice == 'a':
@@ -109,10 +110,8 @@ def choose_output_file(quiz_number, class_name):
                 print(f"Renamed output base to '{base_file_name}'.")
                 break
             else:
-                print("Please enter 'y', 'n', or 'a'.")
+                print("Please enter 'y', 'n', '1', '0', or 'a'.")
     return base_path
-
-
 
 
 def OLD_choose_output_file(quiz_number, class_name):

@@ -50,29 +50,29 @@ def choose_quiz_and_class():
         except ValueError:
             print("Invalid input. Please enter a number.")
 
-    # Extra info option
+    # Extra info option - accepts 1/y or 0/n (case-insensitive)
     while True:
         extra_info_input = input(
-            "Is there any extra information for this quiz? (1 for yes, 0 for no): "
-        ).strip()
-        if extra_info_input == "1":
+            "Is there any extra information for this quiz? (1/y for yes, 0/n for no): "
+        ).strip().lower()
+        if extra_info_input in ("1", "y"):
             extra_info = input("Please enter the extra information: ")
             quiz_number = quiz_number + " - " + extra_info
             break
-        elif extra_info_input == "0":
+        elif extra_info_input in ("0", "n"):
             break
         else:
-            print("Invalid input. Please enter '1' or '0'.")
+            print("Invalid input. Please enter '1', '0', 'y', or 'n'.")
 
-    # NEW PROMPT: Ask if quiz number and class should be added to question headers
+    # Ask if quiz number and class should be added to question headers - accepts 1/y or 0/n
     while True:
         add_quiz_header = input(
-            "Do you want to add the Quiz Number and Class to each question header? (y/n): "
+            "Do you want to add the Quiz Number and Class to each question header? (1/y for yes, 0/n for no): "
         ).strip().lower()
-        if add_quiz_header in ("y", "n"):
-            add_quiz_header_flag = add_quiz_header == "y"
+        if add_quiz_header in ("1", "y", "0", "n"):
+            add_quiz_header_flag = add_quiz_header in ("1", "y")
             break
-        print("Please enter 'y' or 'n'.")
+        print("Please enter '1', '0', 'y', or 'n'.")
 
     return quiz_number, class_name, add_quiz_header_flag
 
@@ -97,21 +97,17 @@ def choose_extraction_method():
 def ask_only_show_correct():
     while True:
         answer = (
-            input("Only show correct answer for fully correct questions? (y/n): ")
+            input("Only show correct answer for fully correct questions? (1/y for yes, 0/n for no): ")
             .strip()
             .lower()
         )
-        if answer in ["y", "n"]:
-            return answer == "y"
-        print("Please enter 'y' or 'n'.")
+        if answer in ["1", "y", "0", "n"]:
+            return answer in ["1", "y"]
+        print("Please enter '1', '0', 'y', or 'n'.")
 
 
 def main():
     extraction_method = choose_extraction_method()
-
-    only_show_correct = False
-    if extraction_method == 1:
-        only_show_correct = ask_only_show_correct()
 
     files = FileProcess.list_files()
     if not files:
@@ -124,6 +120,10 @@ def main():
         return
 
     quiz_number, class_name, add_quiz_header_flag = choose_quiz_and_class()
+    
+    only_show_correct = False
+    if extraction_method == 1:
+        only_show_correct = ask_only_show_correct()
 
     output_file_base = FileProcess.choose_output_file(quiz_number, class_name)
     if output_file_base is None:
