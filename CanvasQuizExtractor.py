@@ -64,7 +64,17 @@ def choose_quiz_and_class():
         else:
             print("Invalid input. Please enter '1' or '0'.")
 
-    return quiz_number, class_name
+    # NEW PROMPT: Ask if quiz number and class should be added to question headers
+    while True:
+        add_quiz_header = input(
+            "Do you want to add the Quiz Number and Class to each question header? (y/n): "
+        ).strip().lower()
+        if add_quiz_header in ("y", "n"):
+            add_quiz_header_flag = add_quiz_header == "y"
+            break
+        print("Please enter 'y' or 'n'.")
+
+    return quiz_number, class_name, add_quiz_header_flag
 
 
 def choose_extraction_method():
@@ -113,7 +123,7 @@ def main():
         print("No file selected.")
         return
 
-    quiz_number, class_name = choose_quiz_and_class()
+    quiz_number, class_name, add_quiz_header_flag = choose_quiz_and_class()
 
     output_file_base = FileProcess.choose_output_file(quiz_number, class_name)
     if output_file_base is None:
@@ -121,16 +131,26 @@ def main():
         return
 
     if extraction_method == 1:
-        # Pass only_show_correct flag to process_taken_quiz
+        # Pass only_show_correct and add_quiz_header_flag to process_taken_quiz
         HTML_Extract.process_taken_quiz(
-            input_file, output_file_base, quiz_number, class_name, only_show_correct
+            input_file,
+            output_file_base,
+            quiz_number,
+            class_name,
+            only_show_correct,
+            add_quiz_header_flag,
         )
         print(
             f"\nResults saved to:\n - {output_file_base}.txt\n - {output_file_base}.md\n - {output_file_base}.pdf"
         )
     elif extraction_method == 2:
+        # Pass add_quiz_header_flag to untaken quiz processing as well (optional)
         HTML_Extract.process_untaken_quiz(
-            input_file, output_file_base, quiz_number, class_name
+            input_file,
+            output_file_base,
+            quiz_number,
+            class_name,
+            add_quiz_header_flag,
         )
         print(
             f"\nResults saved to:\n - {output_file_base}.txt\n - {output_file_base}.md\n - {output_file_base}.pdf"
