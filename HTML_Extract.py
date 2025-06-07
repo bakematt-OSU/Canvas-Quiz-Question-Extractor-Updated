@@ -490,3 +490,183 @@ def process_taken_quiz(
     txt_file.close()
     md_file.close()
     c.save()
+
+
+def process_taken_quiz_multiple_files_with_quiznum(
+    all_questions,  # list of tuples (file_path, question_soup, quiz_number)
+    output_file_base,
+    class_name,
+    only_show_correct=False,
+    add_quiz_header=False,
+):
+    """
+    Batch process multiple taken quizzes with per-question quiz_number,
+    preserving your existing formatting exactly.
+    """
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.units import inch
+
+    txt_path = output_file_base + ".txt"
+    md_path = output_file_base + ".md"
+    pdf_path = output_file_base + ".pdf"
+
+    txt_file = open(txt_path, "w", encoding="utf-8")
+    md_file = open(md_path, "w", encoding="utf-8")
+    c = canvas.Canvas(pdf_path, pagesize=letter)
+
+    left_margin = 0.25 * inch
+    right_margin = letter[0] - 0.25 * inch
+    line_height = 14
+    current_y = letter[1] - 1 * inch
+    page_num = 1
+
+    total_points_earned = 0.0
+    total_points_possible = 0.0
+
+    # Draw header for batch with generic "Batch" quiz label
+    def draw_header():
+        page_width = letter[0]
+        y_header = letter[1] - 0.25 * inch
+        header_text = f"{class_name} - Batch - Score: {total_points_earned}/{total_points_possible}"
+        text_width = c.stringWidth(header_text, "Courier-Bold", 12)
+        x_header = (page_width - text_width) / 2
+        c.setFont("Courier-Bold", 12)
+        c.drawString(x_header, y_header, header_text)
+        footer_text = f"Page {page_num}"
+        footer_y = 0.5 * inch
+        text_width = c.stringWidth(footer_text, "Courier", 12)
+        c.setFont("Courier", 10)
+        c.drawString((page_width - text_width) / 2, footer_y, footer_text)
+
+    draw_header()
+
+    question_counter = 1
+
+    for file_path, question, quiz_number in all_questions:
+        # Extract info with your existing extractor
+        question_info = extract_question_info(question)
+        answers_info = extract_answers_info(question, question_info["is_correct"])
+
+        total_points_earned += question_info["points_awarded"]
+        total_points_possible += question_info["points_possible"]
+
+        # Override question number to include quiz number and class
+        # if add_quiz_header:
+        #     question_info["number"] = f"{quiz_number} - {question_info['number']}"
+
+        current_y, page_num = write_question_to_files(
+            question_info,
+            answers_info,
+            txt_file,
+            md_file,
+            c,
+            current_y,
+            left_margin,
+            right_margin,
+            line_height,
+            question_counter,
+            file_path,
+            class_name,
+            quiz_number,
+            total_points_earned,
+            total_points_possible,
+            page_num,
+            only_show_correct,
+            add_quiz_header,
+        )
+        question_counter += 1
+
+    txt_file.close()
+    md_file.close()
+    c.save()
+
+
+def process_untaken_quiz_multiple_files_with_quiznum(
+    all_questions,  # list of tuples (file_path, question_soup, quiz_number)
+    output_file_base,
+    class_name,
+    add_quiz_header=False,
+):
+    """
+    Batch process multiple untaken quizzes with per-question quiz_number,
+    preserving your existing formatting exactly.
+    """
+    txt_path = output_file_base + ".txt"
+    md_path = output_file_base + ".md"
+    pdf_path = output_file_base + ".pdf"
+
+    txt_file = open(txt_path, "w", encoding="utf-8")
+    md_file = open(md_path, "w", encoding="utf-8")
+    c = canvas.Canvas(pdf_path, pagesize=letter)
+
+    left_margin = 0.25 * inch
+    right_margin = letter[0] - 0.25 * inch
+    line_height = 14
+    current_y = letter[1] - 1 * inch
+    page_num = 1
+
+    def draw_header():
+        page_width = letter[0]
+        y_header = letter[1] - 0.25 * inch
+        header_text = f"{class_name} - Batch"
+        text_width = c.stringWidth(header_text, "Courier-Bold", 12)
+        x_header = (page_width - text_width) / 2
+        c.setFont("Courier-Bold", 12)
+        c.drawString(x_header, y_header, header_text)
+        footer_text = f"Page {page_num}"
+        footer_y = 0.5 * inch
+        text_width = c.stringWidth(footer_text, "Courier", 12)
+        c.setFont("Courier", 10)
+        c.drawString((page_width - text_width) / 2, footer_y, footer_text)
+
+    draw_header()
+
+    question_counter = 1
+
+    for file_path, question, quiz_number in all_questions:
+        question_header = question.find("div", class_="header")
+        question_number_raw = (
+            question_header.find("span", class_="name question_name").get_text(strip=True)
+            if question_header else "Question"
+        )
+        question_number_cleaned = re.sub(
+            r"(Partial|IncorrectQuestion|CorrectQuestion)", "", question_number_raw
+        ).strip()
+        if not question_number_cleaned.lower().startswith("question"):
+            question_number_cleaned = "Question " + question_number_cleaned
+
+        # if add_quiz_header:
+        #     question_number_cleaned = f"{quiz_number} - {class_name} - {question_number_cleaned}"
+
+        question_text_div = question.find("div", class_="question_text")
+        question_text = (
+            question_text_div.get_text(" ", strip=True).replace("\xa0", " ")
+            if question_text_div
+            else ""
+        )
+
+        txt_file.write(f"{question_number_cleaned.upper()}\n\n")
+        txt_file.write(question_text + "\n\n")
+        md_file.write(f"**{question_number_cleaned}**\n\n")
+        md_file.write(question_text + "\n\n")
+
+        answers = question.find_all("div", class_="answer")
+        for idx_ans, answer in enumerate(answers, 1):
+            answer_text_div = answer.find("div", class_="answer_text") or answer.find("div", class_="answer_label")
+            answer_text = (
+                answer_text_div.get_text(strip=True).replace("\xa0", " ")
+                if answer_text_div
+                else "No answer text found."
+            )
+            txt_file.write(f"Option {idx_ans}: {answer_text}\n")
+            md_file.write(f"- Option {idx_ans}: {answer_text}\n\n")
+
+        txt_file.write("\n")
+        md_file.write("\n---\n\n")
+
+        question_counter += 1
+
+    txt_file.close()
+    md_file.close()
+    c.save()

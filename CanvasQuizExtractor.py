@@ -1,20 +1,18 @@
 """
 Canvas:   Quiz Extractor
 Author:   Matthew Baker
-Brief:    Takes HTML file of Quiz results from Canvas and creates
+Brief:    Takes one or more HTML files of Quiz results from Canvas and creates
           easy to read Text, Markdown, and PDF documents for studying or flash cards.
-Version:  0.3
-Date:     2025-06-06
+Version:  0.7
+Date:     2025-06-07
 """
 
 import os
 from datetime import datetime
-from bs4 import BeautifulSoup
 import HTML_Extract
 import FileProcess
 
 
-# Function to read class info from CurrentClasses.txt
 def read_classes_from_file(filename):
     try:
         with open(filename, "r") as file:
@@ -25,7 +23,50 @@ def read_classes_from_file(filename):
         return []
 
 
+def choose_class_only():
+    """
+    Prompt user to select a class only (no quiz number).
+    """
+    classes = read_classes_from_file("CurrentClasses.txt")
+    print("Available options:")
+    print("0. Enter class info manually")
+
+    if classes:
+        for idx, class_info in enumerate(classes, 1):
+            print(f"{idx}. {class_info}")
+
+    while True:
+        try:
+            choice = int(input("\nSelect a class by number: "))
+            if choice == 0:
+                class_name = input("Enter the class name manually: ")
+                break
+            elif 1 <= choice <= len(classes):
+                class_name = classes[choice - 1]
+                break
+            else:
+                print("Invalid selection. Please try again.")
+        except ValueError:
+            print("Invalid input. Please enter a number.")
+
+    return class_name
+
+
+def choose_quiz_info_for_file(filename):
+    """
+    Prompt user for quiz number or extra info for a single quiz file.
+    """
+    print(f"\nProcessing quiz file: {os.path.basename(filename)}")
+    quiz_number = input("Enter the quiz number or extra info for this quiz: ").strip()
+    if not quiz_number:
+        quiz_number = "UnknownQuiz"
+    return quiz_number
+
+
 def choose_quiz_and_class():
+    """
+    Legacy combined class and quiz selection (used in single mode).
+    """
     classes = read_classes_from_file("CurrentClasses.txt")
     print("Available options:")
     print("0. Enter class info manually")
@@ -50,7 +91,6 @@ def choose_quiz_and_class():
         except ValueError:
             print("Invalid input. Please enter a number.")
 
-    # Extra info option - accepts 1/y or 0/n (case-insensitive)
     while True:
         extra_info_input = input(
             "Is there any extra information for this quiz? (1/y for yes, 0/n for no): "
@@ -64,7 +104,6 @@ def choose_quiz_and_class():
         else:
             print("Invalid input. Please enter '1', '0', 'y', or 'n'.")
 
-    # Ask if quiz number and class should be added to question headers - accepts 1/y or 0/n
     while True:
         add_quiz_header = input(
             "Do you want to add the Quiz Number and Class to each question header? (1/y for yes, 0/n for no): "
@@ -106,57 +145,178 @@ def ask_only_show_correct():
         print("Please enter '1', '0', 'y', or 'n'.")
 
 
+def choose_processing_mode():
+    while True:
+        mode = input("\nProcess a single file or batch (multiple files/folder)? (s (1) / b (2)): ").strip().lower()
+        if mode in ('s', 'single', '1'):
+            return 'single'
+        elif mode in ('b', 'batch', '2'):
+            return 'batch'
+        else:
+            print("Please enter 's' or '1' for single or 'b' or '2' for batch.")
+
+
 def main():
     extraction_method = choose_extraction_method()
+
+    processing_mode = choose_processing_mode()
 
     files = FileProcess.list_files()
     if not files:
         print("No input files found.")
         return
 
-    input_file = FileProcess.choose_input_file(files)
-    if not input_file:
-        print("No file selected.")
-        return
+    if processing_mode == 'single':
+        input_file = FileProcess.choose_input_file(files)
+        if not input_file:
+            print("No file selected.")
+            return
+        input_files = [input_file]
 
-    quiz_number, class_name, add_quiz_header_flag = choose_quiz_and_class()
-    
+        quiz_number, class_name, add_quiz_header_flag = choose_quiz_and_class()
+
+        # Use user's choice for add_quiz_header_flag in single mode
+
+    else:  # batch mode
+        input_files = FileProcess.choose_input_files_with_folders()
+        if not input_files:
+            print("No files selected.")
+            return
+
+        class_name = choose_class_only()
+        add_quiz_header_flag = True  # forced in batch mode
+
+        # Ask quiz number or extra info for each file individually
+        quiz_numbers_per_file = {}
+        for file in input_files:
+            quiz_num = choose_quiz_info_for_file(file)
+            quiz_numbers_per_file[file] = quiz_num
+
     only_show_correct = False
     if extraction_method == 1:
         only_show_correct = ask_only_show_correct()
 
-    output_file_base = FileProcess.choose_output_file(quiz_number, class_name)
-    if output_file_base is None:
-        print("Output file creation cancelled.")
-        return
+    combine_output = input("Combine all quizzes into a single output file? (y/n): ").strip().lower() in ("y", "1", "yes")
 
-    if extraction_method == 1:
-        # Pass only_show_correct and add_quiz_header_flag to process_taken_quiz
-        HTML_Extract.process_taken_quiz(
-            input_file,
-            output_file_base,
-            quiz_number,
-            class_name,
-            only_show_correct,
-            add_quiz_header_flag,
-        )
-        print(
-            f"\nResults saved to:\n - {output_file_base}.txt\n - {output_file_base}.md\n - {output_file_base}.pdf"
-        )
-    elif extraction_method == 2:
-        # Pass add_quiz_header_flag to untaken quiz processing as well (optional)
-        HTML_Extract.process_untaken_quiz(
-            input_file,
-            output_file_base,
-            quiz_number,
-            class_name,
-            add_quiz_header_flag,
-        )
-        print(
-            f"\nResults saved to:\n - {output_file_base}.txt\n - {output_file_base}.md\n - {output_file_base}.pdf"
-        )
-    else:
-        print("ERROR - No matching Extraction Method")
+    if combine_output:
+        if processing_mode == 'batch':
+            output_file_base = FileProcess.choose_output_file("Batch", class_name)
+            if output_file_base is None:
+                print("Output file creation cancelled.")
+                return
+
+            all_questions = []
+            for file in input_files:
+                questions = HTML_Extract.parse_quiz_html(file)
+                quiz_num = quiz_numbers_per_file.get(file, "UnknownQuiz")
+                # Attach quiz_num to each question
+                all_questions.extend([(file, q, quiz_num) for q in questions])
+
+            # You must implement these new combined functions in HTML_Extract.py
+            if extraction_method == 1:
+                HTML_Extract.process_taken_quiz_multiple_files_with_quiznum(
+                    all_questions,
+                    output_file_base,
+                    class_name,
+                    only_show_correct,
+                    add_quiz_header_flag,
+                )
+            else:
+                HTML_Extract.process_untaken_quiz_multiple_files_with_quiznum(
+                    all_questions,
+                    output_file_base,
+                    class_name,
+                    add_quiz_header_flag,
+                )
+
+            print(
+                f"\nCombined results saved to:\n - {output_file_base}.txt\n - {output_file_base}.md\n - {output_file_base}.pdf"
+            )
+
+        else:  # single mode combined (rare, but possible)
+            output_file_base = FileProcess.choose_output_file(quiz_number, class_name)
+            if output_file_base is None:
+                print("Output file creation cancelled.")
+                return
+
+            questions = HTML_Extract.parse_quiz_html(input_files[0])
+            if extraction_method == 1:
+                HTML_Extract.process_taken_quiz(
+                    input_files[0],
+                    output_file_base,
+                    quiz_number,
+                    class_name,
+                    only_show_correct,
+                    add_quiz_header_flag,
+                )
+            else:
+                HTML_Extract.process_untaken_quiz(
+                    input_files[0],
+                    output_file_base,
+                    quiz_number,
+                    class_name,
+                    add_quiz_header_flag,
+                )
+            print(
+                f"\nResults saved to:\n - {output_file_base}.txt\n - {output_file_base}.md\n - {output_file_base}.pdf"
+            )
+
+    else:  # separate outputs per file
+        if processing_mode == 'batch':
+            for file in input_files:
+                quiz_num = quiz_numbers_per_file.get(file, "UnknownQuiz")
+                output_file_base = FileProcess.choose_output_file(quiz_num, class_name)
+                if output_file_base is None:
+                    print(f"Skipping output for {file} due to user choice.")
+                    continue
+
+                if extraction_method == 1:
+                    HTML_Extract.process_taken_quiz(
+                        file,
+                        output_file_base,
+                        quiz_num,
+                        class_name,
+                        only_show_correct,
+                        add_quiz_header_flag,
+                    )
+                else:
+                    HTML_Extract.process_untaken_quiz(
+                        file,
+                        output_file_base,
+                        quiz_num,
+                        class_name,
+                        add_quiz_header_flag,
+                    )
+                print(
+                    f"\nResults saved for {file} to:\n - {output_file_base}.txt\n - {output_file_base}.md\n - {output_file_base}.pdf"
+                )
+
+        else:  # single mode separate (just one file)
+            output_file_base = FileProcess.choose_output_file(quiz_number, class_name)
+            if output_file_base is None:
+                print("Output file creation cancelled.")
+                return
+
+            if extraction_method == 1:
+                HTML_Extract.process_taken_quiz(
+                    input_files[0],
+                    output_file_base,
+                    quiz_number,
+                    class_name,
+                    only_show_correct,
+                    add_quiz_header_flag,
+                )
+            else:
+                HTML_Extract.process_untaken_quiz(
+                    input_files[0],
+                    output_file_base,
+                    quiz_number,
+                    class_name,
+                    add_quiz_header_flag,
+                )
+            print(
+                f"\nResults saved to:\n - {output_file_base}.txt\n - {output_file_base}.md\n - {output_file_base}.pdf"
+            )
 
 
 if __name__ == "__main__":
