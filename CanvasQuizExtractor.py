@@ -55,7 +55,7 @@ def choose_quiz_info_for_file(filename):
     if not quiz_number:
         quiz_number = "UnknownQuiz"
     return quiz_number
-
+1
 
 def choose_quiz_and_class():
     classes = read_classes_from_file("CurrentClasses.txt")

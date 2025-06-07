@@ -9,6 +9,11 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
 
+OPTION_SPACING = 1.0
+QUESTION_HEADER_SPACING = 1.2
+QUESTION_ANSWER_SPACING = 1.2
+
+
 def parse_quiz_html(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
         html_content = f.read()
@@ -132,7 +137,7 @@ def write_question_text_and_images(
             if text:
                 txt_file.write(text + "\n")
                 md_file.write(text + "\n\n")
-                c.setFont("Courier", 12)
+                c.setFont("Courier", 10)
                 current_y = write_pdf_text(
                     c, text, left_margin, right_margin, current_y, line_height
                 )
@@ -141,7 +146,7 @@ def write_question_text_and_images(
                 para_text = child.get_text(" ", strip=True).replace("\xa0", " ")
                 txt_file.write(para_text + "\n\n")
                 md_file.write(para_text + "\n\n")
-                c.setFont("Courier", 12)
+                c.setFont("Courier", 10)
                 current_y = write_pdf_text(
                     c, para_text, left_margin, right_margin, current_y, line_height
                 )
@@ -225,14 +230,14 @@ def draw_page_header_footer(
     page_width = letter[0]
     y_header = letter[1] - 0.25 * inch
     header_text = f"{class_name} - Quiz {quiz_number} - Score: {total_points_earned}/{total_points_possible}"
-    text_width = c.stringWidth(header_text, "Courier-Bold", 12)
+    text_width = c.stringWidth(header_text, "Courier-Bold", 10)
     x_header = (page_width - text_width) / 2
-    c.setFont("Courier-Bold", 12)
+    c.setFont("Courier-Bold", 10)
     c.drawString(x_header, y_header, header_text)
     footer_text = f"Page {page_num}"
     footer_y = 0.5 * inch
-    text_width = c.stringWidth(footer_text, "Courier", 12)
-    c.setFont("Courier", 10)
+    text_width = c.stringWidth(footer_text, "Courier", 8)
+    c.setFont("Courier", 8)
     c.drawString((page_width - text_width) / 2, footer_y, footer_text)
 
 def estimate_question_height(question_info, answers_info, line_height):
@@ -252,7 +257,7 @@ def estimate_question_height(question_info, answers_info, line_height):
     return total_height
 
 def draw_question_header(c, x, y, full_heading):
-    c.setFont("Courier-Bold", 14)
+    c.setFont("Courier-Bold", 12)
     c.drawString(x, y, full_heading)
 
 def draw_answer_line(c, x, y, prefix, answer_text):
@@ -265,17 +270,17 @@ def draw_answer_line(c, x, y, prefix, answer_text):
         rest = prefix
 
     if symbol:
-        c.setFont("Courier-Bold", 12)
+        c.setFont("Courier-Bold", 10)
         c.drawString(x, y, symbol)
-        symbol_width = c.stringWidth(symbol, "Courier-Bold", 12)
+        symbol_width = c.stringWidth(symbol, "Courier-Bold", 10)
     else:
         symbol_width = 0
 
-    c.setFont("Courier-Bold", 12)
+    c.setFont("Courier-Bold", 10)
     c.drawString(x + symbol_width + 2, y, rest)
-    rest_width = c.stringWidth(rest, "Courier-Bold", 12)
+    rest_width = c.stringWidth(rest, "Courier-Bold", 10)
 
-    c.setFont("Courier", 12)
+    c.setFont("Courier", 10)
     c.drawString(x + symbol_width + rest_width + 8, y, answer_text)
 
 def write_question_to_files(
@@ -342,9 +347,9 @@ def write_question_to_files(
     md_file.write(f"**{full_heading}**\n\n")
 
     draw_question_header(c, left_margin, current_y, full_heading)
-    current_y -= line_height * 2
+    current_y -= line_height * QUESTION_HEADER_SPACING
 
-    c.setFont("Courier", 12)
+    c.setFont("Courier", 10)
 
     has_images = bool(question_info["question_text_div"].find_all("img"))
     if has_images:
@@ -375,7 +380,7 @@ def write_question_to_files(
 
     txt_file.write("\n")
 
-    current_y -= line_height
+    current_y -= line_height * QUESTION_ANSWER_SPACING
 
     if only_show_correct and question_info["is_correct"]:
         answers_to_show = [
@@ -404,7 +409,7 @@ def write_question_to_files(
         draw_answer_line(
             c, left_margin + 10, current_y, prefix, answer["text"]
         )
-        current_y -= line_height * 2
+        current_y -= line_height * OPTION_SPACING
 
     c.setLineWidth(1.2)
     c.line(left_margin, current_y - 5, right_margin, current_y - 5)
@@ -529,14 +534,14 @@ def process_taken_quiz_multiple_files_with_quiznum(
         page_width = letter[0]
         y_header = letter[1] - 0.25 * inch
         header_text = f"{class_name} - Batch - Score: {total_points_earned}/{total_points_possible}"
-        text_width = c.stringWidth(header_text, "Courier-Bold", 12)
+        text_width = c.stringWidth(header_text, "Courier-Bold", 10)
         x_header = (page_width - text_width) / 2
-        c.setFont("Courier-Bold", 12)
+        c.setFont("Courier-Bold", 10)
         c.drawString(x_header, y_header, header_text)
         footer_text = f"Page {page_num}"
         footer_y = 0.5 * inch
-        text_width = c.stringWidth(footer_text, "Courier", 12)
-        c.setFont("Courier", 10)
+        text_width = c.stringWidth(footer_text, "Courier", 8)
+        c.setFont("Courier", 8)
         c.drawString((page_width - text_width) / 2, footer_y, footer_text)
 
     draw_header()
@@ -610,14 +615,14 @@ def process_untaken_quiz_multiple_files_with_quiznum(
         page_width = letter[0]
         y_header = letter[1] - 0.25 * inch
         header_text = f"{class_name} - Batch"
-        text_width = c.stringWidth(header_text, "Courier-Bold", 12)
+        text_width = c.stringWidth(header_text, "Courier-Bold", 10)
         x_header = (page_width - text_width) / 2
-        c.setFont("Courier-Bold", 12)
+        c.setFont("Courier-Bold", 10)
         c.drawString(x_header, y_header, header_text)
         footer_text = f"Page {page_num}"
         footer_y = 0.5 * inch
-        text_width = c.stringWidth(footer_text, "Courier", 12)
-        c.setFont("Courier", 10)
+        text_width = c.stringWidth(footer_text, "Courier", 8)
+        c.setFont("Courier", 8)
         c.drawString((page_width - text_width) / 2, footer_y, footer_text)
 
     draw_header()
