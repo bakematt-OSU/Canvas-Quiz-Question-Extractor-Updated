@@ -1,20 +1,11 @@
 import os
 from datetime import datetime
 
-# Define global variables for the input and output directories
 INPUT_FOLDER = "Input"
 OUTPUT_FOLDER = "Output"
 
+
 def list_files():
-    """
-    Lists all files in the 'Input' directory.
-
-    This function prints all the files available in the 'Input' directory
-    and returns them as a list of file names.
-
-    Returns:
-        list: A list of filenames in the 'Input' directory.
-    """
     if not os.path.exists(INPUT_FOLDER):
         print(f"The directory {INPUT_FOLDER} does not exist.")
         return []
@@ -32,12 +23,6 @@ def list_files():
 
 
 def choose_input_file(files):
-    """
-    Prompt user to select a single file from the 'Input' folder.
-
-    Returns:
-        str: Selected file path (including Input folder).
-    """
     while True:
         try:
             choice = int(input("\nEnter the number of the file to process: "))
@@ -49,50 +34,7 @@ def choose_input_file(files):
             print("Invalid input. Please enter a number.")
 
 
-def choose_input_files_simple(files):
-    """
-    Prompt user to select multiple files (no folders).
-
-    User inputs numbers separated by commas or 'all'.
-
-    Returns:
-        list of selected file paths.
-    """
-    print("\nAvailable files in the 'Input' directory:")
-    for idx, file in enumerate(files, 1):
-        print(f"{idx}. {file}")
-
-    while True:
-        choice = input("\nEnter numbers of files separated by commas, or 'all' for all files: ").strip().lower()
-        if choice == 'all':
-            return [os.path.join(INPUT_FOLDER, f) for f in files]
-
-        indices = choice.split(',')
-        try:
-            selected = []
-            for idx_str in indices:
-                idx = int(idx_str.strip()) - 1
-                if 0 <= idx < len(files):
-                    selected.append(os.path.join(INPUT_FOLDER, files[idx]))
-                else:
-                    raise ValueError
-            if selected:
-                return selected
-            else:
-                print("No valid files selected. Please try again.")
-        except ValueError:
-            print("Invalid input. Enter valid numbers separated by commas or 'all'.")
-
-
 def choose_input_files_with_folders():
-    """
-    Prompt user to select files and/or folders from the 'Input' directory.
-
-    Lists files and folders with distinct numbering.
-
-    Returns:
-        list of selected file paths.
-    """
     files = [f for f in os.listdir(INPUT_FOLDER) if os.path.isfile(os.path.join(INPUT_FOLDER, f))]
     folders = [d for d in os.listdir(INPUT_FOLDER) if os.path.isdir(os.path.join(INPUT_FOLDER, d))]
 
@@ -141,17 +83,6 @@ def choose_input_files_with_folders():
 
 
 def choose_output_file(quiz_number, class_name):
-    """
-    Generate a base output file path based on quiz number, class name, and current date,
-    in the Output folder. Does not add extension, so .txt, .md, .pdf can be appended.
-
-    Args:
-        quiz_number (str): The quiz number.
-        class_name (str): The class name.
-
-    Returns:
-        str: The base path for output files WITHOUT extension.
-    """
     if not os.path.exists(OUTPUT_FOLDER):
         os.makedirs(OUTPUT_FOLDER)
 
